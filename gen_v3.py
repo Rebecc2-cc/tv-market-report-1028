@@ -85,7 +85,7 @@ def _read_meta():
             return json.loads(p.stdout)
     except Exception:
         pass
-    return {"week_end": 39, "week_start": 19, "fig1_window": "近20周(26W20-W39)", "fig1_gate": {"main": 1000, "big98": 200}}
+    return {"week_end": 42, "week_start": 23, "fig1_window": "近20周(26W23-W42)", "fig1_gate": {"main": 1000, "big98": 200}}
 META = _read_meta()
 
 models = json.load(open(SRC, encoding="utf-8"))
@@ -187,6 +187,7 @@ body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;backgr
 .wrap{max-width:1560px;margin:0 auto;}
 header{background:#fff;border-radius:10px;padding:18px 22px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.06);}
 h1{font-size:20px;font-weight:700;margin-bottom:6px;}
+.gentime{font-size:12.5px;font-weight:400;color:#6b7280;margin-left:10px;}
 .sub{font-size:12.5px;color:#6b7280;}
 .sub b{color:#374151;}
 .ctrl{background:#fff;border-radius:10px;padding:14px 18px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.06);}
@@ -202,6 +203,10 @@ h1{font-size:20px;font-weight:700;margin-bottom:6px;}
 .btn:hover{border-color:#9aa5b4;background:#f7f9fb;}
 .btn.on{background:#1f2328;color:#fff;border-color:#1f2328;font-weight:600;}
 .btn.mini{padding:3px 9px;font-size:11.5px;}
+/* 图1「年累计」口径切换按钮：默认深色，选中(ON)后橙色渐变醒目 */
+.btn.year{background:#1f2328;color:#fff;border:none;padding:5px 16px;font-size:13px;font-weight:700;border-radius:16px;box-shadow:0 2px 8px rgba(31,35,40,.35);}
+.btn.year:hover{filter:brightness(1.12);}
+.btn.year.on{background:linear-gradient(135deg,#ff8a3d,#f04f1f);box-shadow:0 2px 8px rgba(240,79,31,.4);}
 input.search{padding:6px 11px;border:1px solid #d8dde5;border-radius:6px;font-size:12.5px;width:230px;outline:none;}
 input.search:focus{border-color:#0E7CE8;}
 select{padding:6px 9px;border:1px solid #d8dde5;border-radius:6px;font-size:12.5px;background:#fff;cursor:pointer;outline:none;}
@@ -266,6 +271,10 @@ td{padding:0;vertical-align:top;}
 .mc .badge.tech{background:#f0f2f5;color:#8b95a3;font-weight:500;white-space:nowrap;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;max-width:64px;}
 .mc .badge.tech.hi{background:#0E7CE8;color:#fff;font-weight:600;}
 .mc .badge.tech.none{background:#fafbfc;color:#c9cfd8;border:1px dashed #dde2e8;padding:0 2px;}
+/* 自定义徽标：RGB（海信）/ SQD（TCL）/ 壁纸（TCL ART + 创维壁纸系列，彩虹渐变深色系保证白字可读） */
+.mc .badge.cb-rgb{background:#7c3aed;color:#fff;font-weight:600;}
+.mc .badge.cb-sqd{background:#0f766e;color:#fff;font-weight:600;}
+.mc .badge.cb-wq{background:linear-gradient(90deg,#be123c,#c2410c,#ca8a04,#15803d,#0369a1,#6d28d9);color:#fff;font-weight:700;text-shadow:0 0 3px rgba(0,0,0,.4);}
 .mc .badge.alt{background:#f5f7fa;color:#98a2b0;font-weight:400;}
 .mc .badge.clearb{background:#e11d48;color:#fff;font-weight:600;border-radius:2px;font-size:8px;padding:0 3px;line-height:1.4;}
 .cmpOn .mc{cursor:crosshair;}
@@ -391,6 +400,11 @@ footer{text-align:center;color:#9aa5b4;font-size:11.5px;padding:14px 0 8px;}
 .cell.f1 .m-name{font-weight:600;overflow:hidden;text-overflow:ellipsis;min-width:0;}
 .cell.f1 .m-vol{font-size:9.5px;opacity:.75;flex-shrink:0;margin-left:auto;}
 .cell.f1 .m-clr{font-style:normal;font-size:8px;font-weight:700;color:#e11d48;background:rgba(255,255,255,.85);border-radius:2px;padding:0 3px;line-height:1.4;flex-shrink:0;margin-left:2px;}
+/* 图1 自定义徽标（RGB/SQD/壁纸）：白字小标；壁纸彩虹渐变深色系 */
+.cell.f1 .m-tag{font-style:normal;font-size:8px;font-weight:700;color:#fff;border-radius:2px;padding:0 3px;line-height:1.4;flex-shrink:0;margin-left:2px;}
+.cell.f1 .m-tag.rgb{background:#7c3aed;}
+.cell.f1 .m-tag.sqd{background:#0f766e;}
+.cell.f1 .m-tag.wq{background:linear-gradient(90deg,#be123c,#c2410c,#ca8a04,#15803d,#0369a1,#6d28d9);text-shadow:0 0 3px rgba(0,0,0,.4);}
 .cell.f1 .m-more{font-size:9px;opacity:.6;font-weight:400;}
 /* 行头品牌色左边条（仿参考报告 4px border-left） */
 .rl{border-left:4px solid transparent;padding-left:7px;}
@@ -652,6 +666,7 @@ const S = {
   f4Rows: null, f4Cols: null,
   expBrands: {},            // 图2 展开面板的品牌筛选：{ 展开key: Set(品牌) | undefined }
   clr: {1:0,2:0,3:0,4:0,5:0},   // 各图「移除清库机」开关：0=显示清库(打标) 1=隐藏清库型号
+  year: false,                 // 图1/图2 年累计口径：26W01-末周 累计 >1000 台进入（平阈值）
 };
 
 const fmt = n => n >= 10000 ? (n/10000).toFixed(1)+'万' : String(n);
@@ -703,6 +718,19 @@ function f5Dot(m){ return f5Guard(m) && !isNew(m); }
 function gDot(m){ return f5Dot(m) ? '<i class="gdot" title="新品保护期：豁免清库与近8周全0，首现后20周内"></i>' : ''; }
 /* 清库 / 近8周全0 豁免：新品 + 保护期全部豁免 */
 function protEx(m){ return isNew(m) || f5Guard(m); }
+
+/* 图1/图2 入选门槛（2026-10-27 用户确认）：
+   - 年累计模式（S.year）：按 26W01–26W{末周} 年累计销量 cum_vol>1000 台进入（平阈值，98吋+ 同 1000）；
+   - 默认近20周口径：fig1_ok（主流>1000 / 98吋+>200）；
+   - 两种口径下 新品准入 + 保护期 豁免规则不变 */
+function figGate(m) {
+  if (S.year) return m.cum_vol > 1000 || (isNew(m) && newGate(m) && m.fig1_col != null) || f5Guard(m);
+  return m.fig1_ok || (isNew(m) && newGate(m) && m.fig1_col != null) || f5Guard(m);
+}
+/* 显示销量随口径切换：年累计模式=26年累计 cum_vol；默认模式=近20周 vol20（门槛未过但仍可能入图的保护期/新品款 vol20 为 0 时显示 0） */
+function dispVol(m){ return S.year ? (m.cum_vol||0) : (m.vol20||0); }
+/* 显示销量口径标签（hover/文案用） */
+function volLabel(){ return S.year ? '年累计' : '近20周'; }
 
 /* 去掉型号开头的尺寸前缀：75A4H→A4H；SKS30→SKS30（无尺寸前缀保留） */
 const _SZ_PREFIX = new Set(['32','40','43','50','55','60','65','70','75','77','85','88','98','100','110','120','163']);
@@ -870,11 +898,11 @@ function seriesRows(list) {
   const g = new Map();
   for (const m of list) {
     // 新品豁免原门槛：只要满足新品门槛(newGate)和尺寸有归属列(col!=null)就可以入池；保护期(摘标后)同样豁免
-    if (!m.fig1_ok && !(isNew(m) && newGate(m) && m.fig1_col!=null) && !f5Guard(m)) continue;
+    if (!figGate(m)) continue;   // 图1/图2 入选门槛（默认近20周 / 年累计 由 S.year 切换）
     const k = m.brand + '||' + m.series;
     if (!g.has(k)) g.set(k, {brand:m.brand, series:m.series, vol:0, n:0, cells:new Map()});
     const r = g.get(k);
-    r.vol += m.cum_vol; r.n++;
+    r.vol += dispVol(m); r.n++;
     // 图1 列 = 参考报告的 10 个尺寸列（60吋已并入 55）
     const col = m.fig1_col;
     if (col == null) continue;
@@ -888,22 +916,22 @@ function seriesRows(list) {
     let wv = 0, ap = 0, bestCol = null, bestVol = -1;
     for (const [col, arr] of r.cells) {
       let cv = 0, ca = 0;
-      for (const m of arr) { cv += m.cum_vol; ca += m.avg_price * m.cum_vol; }
+      for (const m of arr) { const d = dispVol(m); cv += d; ca += m.avg_price * d; }
       wv += cv; ap += ca;
       if (cv > bestVol) { bestVol = cv; bestCol = col; }
     }
     r.wavg = wv ? ap / wv : 0;
     r.mainSize = bestCol; r.colAvg = 0;
     const tar = bestCol != null ? r.cells.get(bestCol) : null;
-    if (tar) { let tv = 0, ta = 0; for (const m of tar) { tv += m.cum_vol; ta += m.avg_price * m.cum_vol; } r.colAvg = tv ? ta / tv : 0; }
+    if (tar) { let tv = 0, ta = 0; for (const m of tar) { const d = dispVol(m); tv += d; ta += m.avg_price * d; } r.colAvg = tv ? ta / tv : 0; }
   }
   // 排序：先按品牌（8 品牌按既定顺序）；酷开品牌内 P 系（P开头系列）按第二个字母降序置顶，
   // 非P系排在 P 系之后按 wavg 降序；海信/TCL/创维 按用户指定的固定系列顺序（RANK）；
   // 其余品牌按综合加权均价 wavg 降序
   const RANK = {
-    海信: {'E8 旗舰系':1,'E7 高端系':2,'D7 系':3,'E5 中端系':4,'D6/D5 系':5,'E52 系':6,'D3 系':7,'E2/E3 入门系':8},
-    TCL: {'Q10 系':1,'Q9 系':2,'Q7 系':3,'Q6 系':4,'T7 系':5,'T6 系':6,'T5 系':7,'V8 系':8,'J 系':9,'S11 系':10,'其他':11,'LIFE VISION':12},
-    创维: {'A9/A10 高端系':1,'A8 系':2,'A7 系':3,'A6 系':4,'A28 系':5,'A5 系':6,'A4 系':7,'A3 系':8,'A 系入门':9,'其他':10},
+    海信: {'E8 旗舰系':1,'E7 高端系':2,'E5 中端系':3,'E52 系':4,'E2/E3 入门系':5},
+    TCL: {'Q10 系':1,'Q9 系':2,'Q7 系':3,'Q6 系':4,'T7 系':5,'T6 系':6,'T5 系':7,'V8 系':8,'LIFE VISION':9},
+    创维: {'A9/A10 高端系':1,'A8 系':2,'A7 系':3,'A6 系':4,'A28 系':5,'A5 系':6,'A4 系':7,'A3 系':8,'A 系入门':9},
   };
   const pTier = s => /^P\d/.test(s||'') ? +s[1] : -1;   // P系列第二个字母档位；非P系=-1
   rows.sort((a,b) => {
@@ -915,7 +943,9 @@ function seriesRows(list) {
       return b.wavg - a.wavg;
     }
     if (RANK[a.brand]) {
-      const ra = RANK[a.brand][a.series] ?? 999, rb = RANK[a.brand][b.series] ?? 999;   // 手工固定顺序
+      // 「其他」= 归并/未分类系列，固定排该品牌最后；其余按手工固定顺序 RANK
+      const rankOf = s => s === '其他' ? Infinity : (RANK[a.brand][s] ?? 999);
+      const ra = rankOf(a.series), rb = rankOf(b.series);
       return ra - rb || b.wavg - a.wavg;
     }
     return b.wavg - a.wavg;
@@ -1014,6 +1044,23 @@ function memFmt(mem) {
 /* 内存档位：字段缺失一律按「待补」处理（否则落回白底，造成「残缺」观感） */
 function memBandOf(m) { return m.mem_band || '待补'; }
 
+/* 自定义徽标（2026-10-27 用户确认口径）：
+   - RGB：海信 tech=RGB-Mini LED（红米/Vidda 不标）
+   - SQD：TCL tech=SQD-Mini LED（创维/雷鸟 SQD 不标）
+   - 壁纸：TCL 型号含 ART；创维 壁纸系列（A7/A8/A9/A10 族）或型号含 AC11
+   - TCL Q9M ART 4 款（tech=SQD-Mini LED）同时带「SQD」+「壁纸」双标 */
+function customBadges(m) {
+  const out = [];
+  const t = String(m.tech || '');
+  const model = String(m.model || '');
+  if (m.brand === '海信' && t.includes('RGB-Mini')) out.push({cls:'rgb', txt:'RGB', tip:'RGB-Mini LED'});
+  if (m.brand === 'TCL' && t.includes('SQD-Mini')) out.push({cls:'sqd', txt:'SQD', tip:'SQD-Mini LED'});
+  const wq = (m.brand === 'TCL' && /ART/i.test(model)) ||
+             (m.brand === '创维' && (['A7 系','A8 系','A9/A10 高端系'].includes(m.series) || /AC11/i.test(model)));
+  if (wq) out.push({cls:'wq', txt:'壁纸', tip:'壁纸电视'});
+  return out;
+}
+
 /* 卡片 chip 渲染：
    - 主名：4 品牌用 product_name（雷鸟/Vidda/小米/红米），其余用 model
    - tech 徽章：仅进阶技术（Mini LED 系/OLED/QLED/量子点/激光）显示；
@@ -1034,6 +1081,10 @@ function chip(m, showAnti) {
     const short = (D.techLabel && D.techLabel[t]) || t;
     techBadge = `<span class="badge tech hi" title="屏幕技术：${t}">${short}</span>`;
   }
+  // 自定义徽标（RGB/SQD 与 tech 徽章同义 → 有自定义标时不再重复 tech 徽章；壁纸与 tech 徽章共存）
+  const cbs = customBadges(m);
+  if (cbs.some(b => b.cls === 'rgb' || b.cls === 'sqd')) techBadge = '';
+  const cbsHtml = cbs.map(b => `<span class="badge cb-${b.cls}" title="${b.tip}">${b.txt}</span>`).join('');
   // 清库徽章（图1-4 通用打标，图5 独立处理）
   const cl9 = isClear9(m);
   const cl9tip = cl9 ? '清库:' + cl9.reason + (cl9.ex ? '（高价位例外，阈值' + cl9.T + '台）' : '') : '';
@@ -1051,7 +1102,7 @@ function chip(m, showAnti) {
   return `<div class="mc${memNa} ${S.sel.includes(m.id)?'sel':''}" data-id="${m.id}" title="${hover.replace(/"/g,'&quot;')}">
     <div class="mbar" style="background:${c}"></div>
     <div class="mbody" style="background:${mbg}">
-      <div class="mtop"><span class="md" style="background:${c}"></span><span class="mnm">${main}</span>${gDot(m)}${techBadge}${clearBadge}${newBadge}</div>
+      <div class="mtop"><span class="md" style="background:${c}"></span><span class="mnm">${main}</span>${gDot(m)}${techBadge}${cbsHtml}${clearBadge}${newBadge}</div>
       <div class="mbot"><span>${m.size}吋</span><span>${fmt(m.cum_vol)}台</span>${sv}</div>
     </div></div>`;
 }
@@ -1142,7 +1193,7 @@ function shortName(m) {
 }
 function renderFig1(list) {
   const rows = seriesRows(list);
-  const max = Math.max(1, ...rows.map(r => Math.max(0, ...[...r.cells.values()].map(a => a.reduce((s,x)=>s+x.cum_vol,0)))));
+  const max = Math.max(1, ...rows.map(r => Math.max(0, ...[...r.cells.values()].map(a => a.reduce((s,x)=>s+dispVol(x),0)))));
   const cols = D.fig1Cols;
   const colCnt = new Map();
   for (const r of rows) for (const [c, arr] of r.cells) colCnt.set(c, (colCnt.get(c)||0) + arr.length);
@@ -1154,11 +1205,11 @@ function renderFig1(list) {
     for (const col of cols) {
       const arr = r.cells.get(col);
       if (!arr || !arr.length) { h += '<td><div class="cell empty"></div></td>'; continue; }
-      const v = arr.reduce((a,x)=>a+x.cum_vol,0);
+      const v = arr.reduce((a,x)=>a+dispVol(x),0);
       const t = Math.pow(v/max, 0.42);
       const bg = heatColor(r.brand, v, max);
       const fg = txtOn(t);
-      arr.sort((a,b)=>b.cum_vol-a.cum_vol);
+      arr.sort((a,b)=>dispVol(b)-dispVol(a));
       const shown = arr.slice(0, F1_MAXROWS);
       const more = arr.length > F1_MAXROWS ? `<div class="m-more">还有 ${arr.length-F1_MAXROWS} 款</div>` : '';
       h += `<td><div class="cell f1" style="background:${bg};color:${fg}" data-brand="${r.brand}" data-series="${r.series}" data-col="${col}">
@@ -1168,7 +1219,8 @@ function renderFig1(list) {
           const clT = cl1 ? '清库:'+cl1.reason+(cl1.ex?'（高价位例外，阈值'+cl1.T+'台）':'') : '';
           const clB = cl1 ? `<i class="m-clr" title="${clT.replace(/"/g,'&quot;')}">清库</i>` : '';
           const ngB = isNew(m) ? '<i class="m-ng">新</i>' : '';
-          return `<div class="m-row" title="${m.brand} ${m.model} ${m.size}吋｜累计 ${fmt(m.cum_vol)} 台｜均价 ¥${m.avg_price.toLocaleString()}${hoverParams(m)?'\n\n'+hoverParams(m):''}" data-id="${m.id}"><span class="m-name">${shortName(m)}</span>${gDot(m)}${ngB}${clB}<span class="m-vol">${fmt(m.cum_vol)}</span></div>`;
+          const tagB = customBadges(m).map(b => `<i class="m-tag ${b.cls}" title="${b.tip}">${b.txt}</i>`).join('');
+          return `<div class="m-row" title="${m.brand} ${m.model} ${m.size}吋｜${volLabel()} ${fmt(dispVol(m))} 台｜均价 ¥${m.avg_price.toLocaleString()}${hoverParams(m)?'\n\n'+hoverParams(m):''}" data-id="${m.id}"><span class="m-name">${shortName(m)}</span>${gDot(m)}${tagB}${ngB}${clB}<span class="m-vol">${fmt(dispVol(m))}</span></div>`;
         }).join('')}
         ${more}</div></div></td>`;
     }
@@ -1176,10 +1228,26 @@ function renderFig1(list) {
   }
   h += '</tbody></table>';
   document.getElementById('fig1body').innerHTML = h;
-  document.getElementById('fig1cnt').textContent = `${rows.length} 个系列 · ${list.filter(m=>m.fig1_ok).length} 款 · 单格销量峰值 ${fmt(max)} 台`;
+  document.getElementById('fig1cnt').textContent = `${rows.length} 个系列 · ${list.filter(m=>figGate(m)).length} 款 · 单格销量峰值 ${fmt(max)} 台`;
   const k1 = [];
   for (const r of rows) for (const col of r.cells.keys()) k1.push(r.brand + '|' + r.series + '|' + col);
   updateExpBtn(1, k1);
+}
+
+/* 图1 入选口径动态文案（年累计 开关联动 顶部 sub + 图1 note） */
+function yearNote() {
+  const note = document.getElementById('fig1note');
+  const hsub = document.getElementById('hdSub1');
+  const list = M.filter(m => figGate(m));
+  const serN = new Set(list.map(m => m.brand + '||' + m.series)).size;
+  const wk = (D.meta && D.meta.week_end) || 42;
+  if (S.year) {
+    if (note) note.innerHTML = `9 个尺寸（<b>60吋并入 55、100吋+ 并入 98吋+</b>）入选门槛 <b>26W01–26W${wk} 累计 &gt;1000 台</b>（平阈值，98吋+ 同 1000）　格内数值与底色深浅均按<b>26年累计销量</b>。`;
+    if (hsub) hsub.innerHTML = `图1 布局口径：<b>AVC 26W01–26W${wk} 累计 &gt;1000 台</b>（${list.length} 款 · ${serN} 个系列 · 格内数值为年累计）`;
+  } else {
+    if (note) note.innerHTML = `9 个尺寸（<b>60吋并入 55、100吋+ 并入 98吋+</b>）入选门槛 <b>${(D.meta && D.meta.fig1_window) || '近20周'} 主流&gt;1000 / 98吋+&gt;200 台</b>　格内数值与底色深浅均按<b>${(D.meta && D.meta.fig1_window) || '近20周'}销量</b>，入选 ${list.length} 款 / ${serN} 系列。`;
+    if (hsub) hsub.innerHTML = `图1 布局口径：<b>AVC ${(D.meta && D.meta.fig1_window) || '近20周'} 主流&gt;1000 / 98吋+&gt;200 台</b>（${list.length} 款 · ${serN} 个系列 · 格内数值为近20周）`;
+  }
 }
 
 /* 图2 列：98-100吋 与 100吋以上 合并为「98吋+」（用户 2026-09-04） */
@@ -1191,7 +1259,7 @@ const FIG2_COLS = ['50吋及以下', '55吋', '65吋', '75吋', '85吋', '98吋+
 function renderFig2(list) {
   const g = new Map();
   for (const m of list) {
-    if (!m.fig1_ok && !(isNew(m) && newGate(m) && m.fig1_col!=null) && !f5Guard(m)) continue;   // 图2 跟随图1，新品与保护期豁免门槛
+    if (!figGate(m)) continue;   // 图2 跟随图1（默认近20周 / 年累计 由 S.year 切换）
     const b = beltOf(m), s = fig2ColOf(m);
     if (!g.has(b)) g.set(b, new Map());
     if (!g.get(b).has(s)) g.get(b).set(s, {n:0,v:0,arr:[]});
@@ -1614,7 +1682,7 @@ function exportF5Csv(list) {
 /* ===== URL 状态记忆：筛选写入 hash（replaceState 不产生历史），刷新/分享不丢 ===== */
 function saveHash() {
   const o = {b1:[...S.b[1]], b2:[...S.b[2]], b3:[...S.b[3]], b4:[...S.b[4]],
-             s: S.size, bl: [...S.belts], q: S.q, mo: S.mainOnly ? 1 : 0, f4: S.fig4};
+             s: S.size, bl: [...S.belts], q: S.q, mo: S.mainOnly ? 1 : 0, f4: S.fig4, y: S.year ? 1 : 0};
   const h = '#' + encodeURIComponent(JSON.stringify(o));
   if (location.hash !== h) history.replaceState(null, '', h);
 }
@@ -1631,6 +1699,7 @@ function loadHash() {
     if (typeof o.q === 'string') S.q = o.q;
     if (o.mo) S.mainOnly = true;
     if (o.f4 === 'mem' || o.f4 === 'energy') S.fig4 = o.f4;
+    if (o.y) S.year = true;
   } catch (e) { /* 非法 hash 忽略，按默认状态渲染 */ }
 }
 
@@ -1712,6 +1781,13 @@ function buildMisc() {
   };
   document.getElementById('csvBtn').onclick = exportCsv;
   document.getElementById('fig2exp').onclick = () => toggleAllExp(2);
+  const yb = document.getElementById('yearBtn');
+  if (yb) yb.onclick = () => {
+    S.year = !S.year;
+    yb.classList.toggle('on', S.year);
+    yearNote();
+    renderAll();
+  };
   document.getElementById('cmpBtn').onclick = e => {
     S.cmp = !S.cmp;
     e.target.classList.toggle('on', S.cmp);
@@ -1835,6 +1911,7 @@ document.getElementById('diffOnly').onchange = e => {
 };
 
 loadHash(); buildMisc(); buildFigSizes(3); buildFigSizes(4); renderAll();
+yearNote();   // 顶部 sub + 图1 note 文案与当前口径（近20周 / 年累计）同步
 
 /* ============================ 图5 单产品定位分析 ============================ */
 // 尺寸档位（仅 >50 吋）
@@ -2583,9 +2660,9 @@ def build_html():
 <div class="wrap">
 
 <header>
-  <h1>8品牌电视定位布局报告</h1>
+  <h1>8品牌电视定位布局报告 <span class="gentime">更新时间：{datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}</span></h1>
   <div class="sub">
-    图1 布局口径：<b>AVC {META['fig1_window']} 主流&gt;1000 / 98吋+&gt;200 台</b>（{n1} 款 · {ser1_n} 个系列）　
+    <span id="hdSub1">图1 布局口径：<b>AVC {META['fig1_window']} 主流&gt;1000 / 98吋+&gt;200 台</b>（{n1} 款 · {ser1_n} 个系列）</span>　
     销量口径：<b>AVC 26W01–26W{META['week_end']} 累计</b>（全量 {n} 款 · 累计 {total_v/10000:.1f} 万台）　
     图3／图4 门槛（近20周）：图3 &gt;50吋 主流&gt;3000 / 98吋+&gt;500 台；图4 ≤50吋 &gt;1000 台（共 {param_n} 款）
   </div>
@@ -2612,10 +2689,10 @@ def build_html():
 </div>
 
 <section>
-  <h2>图1　系列 × 尺寸 销量分布</h2>
+  <h2>图1　系列 × 尺寸 销量分布 <span class="btn year" id="yearBtn" title="按 26W01–26W{META['week_end']} 年累计销量 &gt;1000 台进入图1（平阈值，98吋+ 同 1000）">年累计</span></h2>
   <div class="fig-brand" id="fig1brand"></div>
-  <div class="note">9 个尺寸（<b>60吋并入 55、100吋+ 并入 98吋+</b>）
-    入选门槛 <b>近20周(26W20–W39) 主流&gt;1000 / 98吋+&gt;200 台</b>　底色深浅 = 该格销量强度，入选 {n1} 款 / {ser1_n} 系列。</div>
+  <div class="note" id="fig1note">9 个尺寸（<b>60吋并入 55、100吋+ 并入 98吋+</b>）
+    入选门槛 <b>{META['fig1_window']} 主流&gt;1000 / 98吋+&gt;200 台</b>　底色深浅 = 该格销量强度，入选 {n1} 款 / {ser1_n} 系列。</div>
   <div class="scroll" id="fig1body"></div>
   <div class="legend">
     <span class="lg"><span class="heat-scale"><span class="hs-bar"></span>浅 → 深 = 单格销量强度（0 → 峰值）</span></span>
@@ -2669,7 +2746,7 @@ def build_html():
   <h2>图5　产品定位分析</h2>
   <div class="fig-brand" id="fig5brand"></div>
   <div class="note">以「尺寸 × 价位段」为竞争地图，定位<b>你的某一款产品</b>落点（仅分析 <b>&gt;50 吋</b>大屏市场），看它吃哪种市场机会（<b>扎堆卷 / 看增长 / 找空白</b>）再下钻对标。
-    格色 = 该位置拥挤度（过门槛型号数，自动分桶），蓝标 = 该格近8周销量上升（后4周 vs 前4周增长≥20%），红/深色格 = 已选中的目标落点（<b>点击可多选，再点取消</b>）。门槛（近20周）：<b>98吋+ &gt;200 台、其他尺寸 &gt;1000 台</b>。趋势口径：AVC 26W31–38 逐周销量。</div>
+    格色 = 该位置拥挤度（过门槛型号数，自动分桶），蓝标 = 该格近8周销量上升（后4周 vs 前4周增长≥20%），红/深色格 = 已选中的目标落点（<b>点击可多选，再点取消</b>）。门槛（近20周）：<b>98吋+ &gt;200 台、其他尺寸 &gt;1000 台</b>。趋势口径：AVC 26W35–42 逐周销量。</div>
   <div class="f5wrap">
     <div class="f5left">
       <div class="f5card">

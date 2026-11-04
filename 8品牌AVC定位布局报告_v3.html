@@ -494,7 +494,7 @@ th .f5fbtn.act{background:#0E7CE8;color:#fff;border-color:#0E7CE8}
 <div class="wrap">
 
 <header>
-  <h1>8品牌电视定位布局报告 <span class="gentime">更新时间：2026-11-04 15:21</span></h1>
+  <h1>8品牌电视定位布局报告 <span class="gentime">更新时间：2026-11-04 15:43</span></h1>
   <div class="sub">
     <span id="hdSub1">图1 布局口径：<b>AVC 近20周(26W25-W44) 主流&gt;1000 / 98吋+&gt;200 台</b>（403 款 · 51 个系列）</span>　
     销量口径：<b>AVC 26W01–26W44 累计</b>（全量 1403 款 · 累计 796.8 万台）　
@@ -1886,14 +1886,19 @@ function rankIdx(k, m) {
 function doCompare() {
   const sel = S.sel.map(id => M[id]);
   const keys = ['size','cum_vol','avg_price','price_belt','tech']
-    .concat(sel.some(m=>m.size>50) ? ['part','refresh','mem','anti'] : [])
+    .concat(sel.some(m=>m.size>50) ? ['part','refresh','mem','anti','audio'] : [])
     .concat(sel.some(m=>m.size<=50) ? ['res','mem','energy'] : []);
   const seen = new Set(); const ks = keys.filter(k => !seen.has(k) && seen.add(k));
   const LAB = {size:'尺寸', cum_vol:'累计销量', avg_price:'均价', price_belt:'价格带', tech:'屏幕技术',
-    part:'控光分区', refresh:'刷新率', mem:'内存', anti:'抗反射', res:'分辨率', energy:'能效等级'};
+    part:'控光分区', refresh:'刷新率', mem:'内存', anti:'抗反射', audio:'声道', res:'分辨率', energy:'能效等级'};
   const noColor = new Set(['avg_price','price_belt','size']);
-  let h = '<table class="ctab"><tr><th>指标</th>' + sel.map(m =>
-    `<th style="border-top:3px solid ${CO[m.brand]}">${m.brand}<br>${m.model}<br><span style="font-weight:400;color:#8b95a3">${m.size}吋</span></th>`).join('') + '</tr>';
+  let h = '<table class="ctab"><tr><th>指标</th>' + sel.map(m => {
+    // 有映射产品名的型号（雷鸟/Vidda/小米/红米）：型号栏主标题显示产品名，原型号放在副行
+    const pn = ((D.useProduct || []).indexOf(m.brand) >= 0 && m.product_name) ? m.product_name : '';
+    const main = pn || m.model;
+    const sub = pn ? `${m.model} · ${m.size}吋` : `${m.size}吋`;
+    return `<th style="border-top:3px solid ${CO[m.brand]}">${m.brand}<br>${main}<br><span style="font-weight:400;color:#8b95a3">${sub}</span></th>`;
+  }).join('') + '</tr>';
   for (const k of ks) {
     const vals = sel.map(m => {
       if (k === 'size') return m.size;
